@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Home</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Home</h1>
+
+    
+
+
+
+    
+
+
+    <h3> </h3>
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+    <section>
+        <article><h2>Clown Assignment</h2>
+<p>Welcome to the documentation website for the <strong>Programming Homework 2: Clown</strong> assignment.</p>
+<p>The sidebar to the right contains documentation for the various classes and methods used to create the clown in <a href="https://codepen.io/kenny-designs/pen/RwpaPVG">this</a> CodePen.</p>
+<h3>How Do I Use The Clown?</h3>
+<p>To begin, take a moment to glance over the <a href="./Clown.html">Clown</a> class.</p>
+<p>There are a few things to note about the Clown class. First, it extends the Three.js class Object3D. That way, when the user creates a new clown it can be immediately placed into the scene like so:</p>
+<pre class="prettyprint source lang-javascript"><code>// Create a new clown and add it to the scene
+const clown = new Clown();
+scene.add(clown);
+</code></pre>
+<p>The clown can then be manipulated as one would with any other Object3D object. For example, one could translate the entire clown with its position attribute inherited from Object3D.</p>
+<pre class="prettyprint source lang-javascript"><code>// Set the clown's x position to 3 and its y and z positions to 0
+clown.position.set(3, 0, 0);
+</code></pre>
+<p>Also worth noting is that the local origin of the clown is right between its feet. As such, rotating the clown will rotate it around this point.</p>
+<h3>How Do I Customize The Clown?</h3>
+<p>By default, the clown has the following settings:</p>
+<pre class="prettyprint source lang-javascript"><code>const clownParams = {
+  arms: {
+    length: 10,
+    leftArm: {
+      rotX: 0,
+      rotY: 0,
+      rotZ: Math.PI / 6,
+    },
+    rightArm: {
+      rotX: 0,
+      rotY: 0,
+      rotZ: -Math.PI / 6,
+    },
+  },
+  legs: {
+    length: 10,
+  },
+  body: {
+    radius: 6,
+    stretchY: 1.25,
+  },
+  head: {
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
+    rotX: 0,
+    rotY: 0,
+    rotZ: 0,
+  },
+};
+</code></pre>
+<p>For a deeper explanation into each attribute, please refer to the <a href="./global.html#ClownParams">ClownParams</a> portion of the documentation.</p>
+<p>To change these settings, one can invoke the clown's <a href="./Clown.html#redraw">redraw()</a> method and supply new parameters via a JavaScript object. For example, say you want to set the length of the clown's legs to be 15. Invoke the redraw() method like so:</p>
+<pre class="prettyprint source lang-javascript"><code>// Redraw the clown with both legs having a length of 15
+clown.redraw({
+  legs: {
+    length: 15,
+  },
+});
+
+// Changes won't appear until after rendering
+TW.render();
+</code></pre>
+<p>You can also set multiple settings for the clown as well. You could also rotate one of the arms and the head as well.</p>
+<pre class="prettyprint source lang-javascript"><code>clown.redraw({
+  legs: {
+    // Redraw the clown with both legs having a length of 15
+    length: 15,
+  },
+  arms: {
+    leftArm: {
+      // Rotate left arm by 45 degrees over the y-axis
+      rotY: Math.PI / 4,
+    },
+  },
+  head: {
+    // Rotate the head by 45 degrees over the y-axis
+    rotY: Math.PI / 4,
+  },
+});
+
+// Changes won't appear until after rendering
+TW.render();
+</code></pre>
+<p>Lastly, the constructor of the clown can also take these parameters.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create a new clown and add it to the scene with legs having a length of 15
+const clown = new Clown({
+  legs: {
+    length: 15,
+  },
+});
+
+scene.add(clown);
+</code></pre>
+<h3>How Does The Clown Work Internally?</h3>
+<p>Firstly, notice that the code uses the underscore <em>private</em> naming convention. As such, only the Clown's constructor and the redraw() method are 'public.' The rest of the properties and methods of Clown are denoted to be private with an underscore prefix. Those private methods are the backbone of the clown though. As such, we'll explore them now.</p>
+<p>To begin, when a new clown is created its <a href="./Clown.html#Constructor">constructor</a> invokes the <a href="./Clown.html#redraw">redraw()</a> method and gives it any options (<a href="./global.html#ClownParams">ClownParams</a>) it was provided. From there, redraw() starts to invoke those previously mentioned 'private' methods.</p>
+<h4>_setOptions()</h4>
+<p>The first private method invoked is <a href="./Clown.html#_setOptions">_setOptions()</a>. Any options that were given to redraw() are given to _setOptions. _setOptions then updates the clown's internal <a href="./Clown.html#_options">_options</a> attribute with the parameters passed to it. If _options doesn't exist yet then a new one is created with the default settings that were shown in the first section of this document.</p>
+<h4>_createClown()</h4>
+<p>Now that the clown has updated its internal options, the actual meshes that make up the clown are created. Within the <a href="./Clown.html#_createClown">_createClown()</a> method, this is done by first creating the body of the clown followed by the head of the clown like so:</p>
+<pre class="prettyprint source lang-javascript"><code>_createClown(options) {
+    const clown = new THREE.Object3D();
+
+    // Create the body and add it to the clown
+    const body = this._createBody(options.body, options.arms, options.legs);
+    clown.add(body);
+
+    // Create the head
+    const head = this._createHead(options.head);
+
+    // ... head is positioned and rotated
+
+    // Add the head to the clown
+    clown.add(head);
+
+    // Return the final clown scene graph
+    return clown;
+}
+</code></pre>
+<h4>_createBody()</h4>
+<p>The <a href="./Clown.html#_createBody">_createBody()</a> method builds the torso, arms, and legs of the clown that is returned as the body.</p>
+<pre class="prettyprint source lang-javascript"><code>// The body object that the torso, arms, and legs are attached to then returned
+const body = new THREE.Object3D();
+</code></pre>
+<p>The torso consists of just a single sphere that is stretched along the y-axis to make it appear more like an ellipsoid.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create the geometry, material, and mesh for the torso
+const torsoGeom = new THREE.SphereGeometry(radius, 32, 32);
+const torsoMat = new THREE.MeshBasicMaterial({ color: 0x00a9fe });
+const torsoMesh = new THREE.Mesh(torsoGeom, torsoMat);
+
+// Scale the torso on the y-axis
+torsoMesh.scale.y = stretchY;
+
+// Position the torso above the legs
+torsoMesh.position.set(0, legOptions.length + bodyOffset - 1, 0);
+
+// Add the torsoMesh to the body object
+body.add(torsoMesh);
+</code></pre>
+<p>Next, both arms are made with the <a href="./Clown.html#_createArm">_createArm()</a> method, positioned into place at the shoulders of the torso, and added to the body.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create the left arm and add it to the body
+{
+  // Create the left arm
+  const leftArm = this._createArm(length);
+
+  // ... Position and rotate the left arm into place
+
+  // Add the left arm to the body
+  body.add(leftArm);
+}
+
+// Create the right arm and add it to the body
+{
+  // Create the right arm
+  const rightArm = this._createArm(length);
+
+  // ... Position and rotate the right arm into place
+
+  // Add the right arm to the body
+  body.add(rightArm);
+}
+</code></pre>
+<p>Lastly, the both legs are added to the body via the <a href="./Clown.html#_createLeg">_createLeg()</a> method.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create and add the left leg to the body
+{
+  const leftLeg = this._createLeg(length); // Create the left leg
+  // ... Position the left leg
+  body.add(leftLeg); // Add the left leg to the body
+}
+
+// Create and add the right leg to the body
+{
+  const rightLeg = this._createLeg(length); // Add the right leg
+  // ... Position the right leg
+  body.add(rightLeg); // Add the right leg to the body
+}
+</code></pre>
+<p>Awesome! Now the torso, arms, and legs have all been created and added to the body of the clown. Let's now examine how the arms and legs are made.</p>
+<h4>_createArm()</h4>
+<p>A single arm is created with the <a href="./Clown.html#_createArm">_createArm()</a> method based on a given length. A single arm of the clown is made up of three meshes. A sphere for the shoulder, a cylinder for the limb portion of the arm, and then another sphere for the hand.</p>
+<p>To begin, we have a single arm that all three parts are added to.</p>
+<pre class="prettyprint source lang-javascript"><code>const arm = new THREE.Object3D();
+</code></pre>
+<p>Next, the shoulder is made from a sphere.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create shoulder geometry, material, and mesh
+const shoulderGeom = new THREE.SphereGeometry(2);
+const shoulderMat = new THREE.MeshBasicMaterial({ color: 0xf030d9 });
+const shoulderMesh = new THREE.Mesh(shoulderGeom, shoulderMat);
+
+// Add shoulder to arm
+arm.add(shoulderMesh);
+</code></pre>
+<p>Then the limb portion of the arm is added set to the length passed into _createArm().</p>
+<pre class="prettyprint source lang-javascript"><code>// Create limb geometry, material, and mesh
+const limbGeom = new THREE.CylinderGeometry(0.9, 0.9, length);
+const limbMat = new THREE.MeshBasicMaterial({ color: 0x00a9fe });
+const limbMesh = new THREE.Mesh(limbGeom, limbMat);
+
+// Move the limb down to keep origin at shoulder
+limbMesh.position.set(0, -length / 2, 0);
+
+// Add limb to the arm
+arm.add(limbMesh);
+</code></pre>
+<p>And finally, we create a slightly smaller sphere for the hand and place it at the end of the limb.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create hand geometry, material, and mesh
+const handGeom = new THREE.SphereGeometry(1.5);
+const handMat = new THREE.MeshBasicMaterial({ color: 0x19efb3 });
+const handMesh = new THREE.Mesh(handGeom, handMat);
+
+// Position the hand below the limb
+handMesh.position.set(0, 0.75 - length, 0);
+
+// Add the hand to the arm
+arm.add(handMesh);
+</code></pre>
+<p>Then the arm is returned so that the body can determine where to place it and rotate it.</p>
+<pre class="prettyprint source lang-javascript"><code>// Return the arm scene graph
+return arm;
+</code></pre>
+<h4>_createLeg()</h4>
+<p>A single leg is created with the <a href="./Clown.html#_createLeg">_createLeg()</a> method based on a given length. It consists of a single cylinder for the limb portion of the leg and then a half-sphere for the foot with a circle mesh underneath it so that it looks solid.</p>
+<p>As always, we need a single leg to add everything to.</p>
+<pre class="prettyprint source lang-javascript"><code>const leg = new THREE.Object3D();
+</code></pre>
+<p>Next, we create the limb portion of the leg based on the length passed into _createLeg().</p>
+<pre class="prettyprint source lang-javascript"><code>// Create the limb geometry, material, and mesh
+const limbGeom = new THREE.CylinderGeometry(0.8, 0.8, length);
+const limbMat = new THREE.MeshBasicMaterial({ color: 0xf030d9 });
+const limbMesh = new THREE.Mesh(limbGeom, limbMat);
+
+// Move the limb down to keep origin at leg joint
+limbMesh.position.set(0, -length / 2, 0);
+
+// Add the limb to the leg object
+leg.add(limbMesh);
+</code></pre>
+<p>With the limb created, we place a half-sphere at the bottom of it to represent a foot. In addition, A circle mesh is placed below the foot to give the illusion that it's whole (when in reality the foot is more of a bowl shape with an open bottom).</p>
+<pre class="prettyprint source lang-javascript"><code>// Create the foot geometry, material, and mesh
+const footGeom = new THREE.SphereGeometry(
+  2,
+  8,
+  6,
+  0,
+  Math.PI * 2, // This and the following angle turns the footGeom into a half-sphere
+  0,
+  Math.PI / 2
+);
+const footMat = new THREE.MeshBasicMaterial({ color: 0x19efb3 });
+const footMesh = new THREE.Mesh(footGeom, footMat);
+
+// ... Position the foot below the limb
+
+// Add the foot to the leg object
+leg.add(footMesh);
+
+// Create geometry and mesh for bottom of foot
+const footBottomGeom = new THREE.CircleGeometry(2);
+const footBottomMesh = new THREE.Mesh(footBottomGeom, footMat);
+
+// ... Position foot bottom below the foot and rotate it into place
+
+// Add the bottom of the foot to the leg object
+leg.add(footBottomMesh);
+</code></pre>
+<p>Lastly, we return the leg and let it get positioned by the _createBody() method.</p>
+<pre class="prettyprint source lang-javascript"><code>// Return the leg scene graph
+return leg;
+</code></pre>
+<h4>_createHead()</h4>
+<p>After the body is created, the <a href="./Clown.html#_createClown">_createClown()</a> method, then invokes the <a href="./Clown.html#_createHead">_createHead()</a> method to build the actual head of the clown and its hat too.</p>
+<p>First, we need something to attach all the parts of our head to. We do the following as per usual:</p>
+<pre class="prettyprint source lang-javascript"><code>const head = new THREE.Object3D();
+</code></pre>
+<p>Next, we build each part of the head. This consists of the dome (the skull portion) of the clown, its eyes, ears, nose, and then mouth. The hat is handled by a separate method.</p>
+<p>To begin, we start with the dome (skull) of the clown which is just a sphere.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create the dome geometry, material, and mesh
+const domeGeom = new THREE.SphereGeometry(5, 32, 32);
+const domeMat = new THREE.MeshBasicMaterial({ color: 0xb8fee4 });
+const domeMesh = new THREE.Mesh(domeGeom, domeMat);
+
+// ... Position the dome so that the orgin is where the neck is
+
+// Add the dome to the head
+head.add(domeMesh);
+</code></pre>
+<p>Next, both ears are created out of spheres and placed on the left and right side of the dome.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create geometry for the ears
+const earGeom = new THREE.SphereGeometry(1.5, 32, 32);
+
+// Create both the left and right ear mesh
+const leftEarMesh = new THREE.Mesh(earGeom, purpleMat);
+const rightEarMesh = new THREE.Mesh(earGeom, purpleMat);
+
+// ... Position the ears on both sides of the head
+
+// Add the ears to the head
+head.add(leftEarMesh);
+head.add(rightEarMesh);
+</code></pre>
+<p>Next, both eyes are made out of spheres and placed in front of the dome.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create eye geometry
+const eyeGeom = new THREE.SphereGeometry(0.5, 32, 32);
+
+// Create meshes for both eyes
+const leftEyeMesh = new THREE.Mesh(eyeGeom, purpleMat);
+const rightEyeMesh = new THREE.Mesh(eyeGeom, purpleMat);
+
+// ... Position eyes in front of the head
+
+// Add eyes to the head
+head.add(leftEyeMesh);
+head.add(rightEyeMesh);
+</code></pre>
+<p>Now the nose is created out of a single sphere and placed in front of the face as well albeit more centered.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create nose geometry and mesh
+const noseGeom = new THREE.SphereGeometry(0.3);
+const noseMesh = new THREE.Mesh(noseGeom, purpleMat);
+
+// ... Position nose in front of the head
+
+// Add nose to the head
+head.add(noseMesh);
+</code></pre>
+<p>Next is the smile which is a bit different in that it is made out of a torus shape that is cut off early from making a full circle.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create smile geometry, material, and mesh
+const smileGeom = new THREE.TorusGeometry(2.5, 0.25, 32, 32, Math.PI / 3);
+const smileMat = new THREE.MeshBasicMaterial({ color: 0xff9fe8 });
+const smileMesh = new THREE.Mesh(smileGeom, smileMat);
+
+// ... Position smile in front of the head with a slight angle
+
+// Add smile to the head
+head.add(smileMesh);
+</code></pre>
+<p>And finally, we create the hat with the _createHat() method, put it on top of the dome, and give it a nifty little tilt.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create the hat
+const hat = this._createHat();
+
+// ... Position the hat on top of the head with a fancy tilt to it
+
+// Add hat to the head
+head.add(hat);
+</code></pre>
+<p>And that's it! The head is complete and the _createClown() method is responsible for putting it above the body. Albeit, any scaling done to the head is applied as follows:</p>
+<pre class="prettyprint source lang-javascript"><code>// Scale the head based on the scale x, y, and z parameters
+const { scaleX, scaleY, scaleZ } = headOptions;
+head.scale.set(scaleX, scaleY, scaleZ);
+</code></pre>
+<p>And finally, the completed head is returned.</p>
+<pre class="prettyprint source lang-javascript"><code>// Return the scene graph for the head
+return head;
+</code></pre>
+<h4>_createHat()</h4>
+<p>The <a href="./Clown.html#_createHat">_createHat()</a> method builds the hat of the clown out of two pieces. The first is the rim of the hat which is just a very flat cylinder and the other is the top portion of the hat which is also just a cylinder but with a slight taper towards the bottom of it.</p>
+<p>We begin with something to attach all the pieces of our hat to.</p>
+<pre class="prettyprint source lang-javascript"><code>const hat = new THREE.Object3D();
+</code></pre>
+<p>Next, we create the rim of the hat with just a very flat cylinder.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create the geometry and mesh for the rim of the hat
+const hatRimGeom = new THREE.CylinderGeometry(8, 8, 0.5, 32, 32);
+const hatRimMesh = new THREE.Mesh(hatRimGeom, hatMat);
+
+// Add the rim to the hat
+hat.add(hatRimMesh);
+</code></pre>
+<p>Then we create the top hat portion of the hat and position it so that it rests on top of the rim.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create the top of the hat's geometry and mesh
+const hatTopGeom = new THREE.CylinderGeometry(5, 4.5, 6, 32, 32);
+const hatTopMesh = new THREE.Mesh(hatTopGeom, hatMat);
+
+// ... Position the top of the hat so that the bottom rests on the rim
+
+// Add hat top to the hat
+hat.add(hatTopMesh);
+</code></pre>
+<p>And that's it! The hat was rather simple to make and gets its final position from the <a href="./Clown.html#_createHead">_createHead()</a> method after we return it.</p>
+<pre class="prettyprint source lang-javascript"><code>// Return the scene graph of the hat
+return hat;
+</code></pre>
+<p>And we're done! The clown is now made.</p>
+<h3>Why Make The Clown A Class?</h3>
+<p>Although the clown could have been built strictly out of functions, a class that extends the Three.js class Object3D made more sense. The clown is made from a variety of meshes but these meshes all come together to form a single object (the clown). In turn, the clown itself should have the ability to be positioned, rotated, and scaled so that the rest of its head and body follow along with it <em>without</em> having to manually position everything via the various _create functions that the clown has. In addition, the clown itself can be added to the scene instead of each individual mesh that it is composed of.</p>
+<pre class="prettyprint source lang-javascript"><code>// Create a new clown
+const clown = new Clown();
+
+// Set the clown's x position to 3 and its y and z positions to 0
+clown.position.set(3, 0, 0);
+
+// Add the clown to the scene (which in turn adds every mesh that it is composed of)
+scene.add(clown);
+</code></pre></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Clown.html">Clown</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createOriginPoint">createOriginPoint</a></li><li><a href="global.html#redrawClown">redrawClown</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Thu May 13 2021 20:43:04 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
